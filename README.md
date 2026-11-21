@@ -23,10 +23,13 @@ Requires Claude Code, Node 18+ and git. Recommended: `uv` (Spec Kit), `python3`,
 Then open a **new** terminal (so the `morpheus` command is on your PATH).
 
 ## Use it anywhere
-```bash
-cd any/project && morpheus      # Claude Code running as Morpheus
+In **any** Claude Code session (terminal, desktop app Code tab, VS Code), type **`/morpheus`**:
 ```
-Or say **"Morpheus, …"** in any Claude Code session.
+/morpheus                          → Morpheus greets you and continues where you left off
+/morpheus build a booking app      → any request
+/morpheus init | sentinel | recall … → shortcuts to every command below
+```
+Or start a session with Morpheus in charge: `cd any/project && morpheus`. Or just say "Morpheus, …".
 
 | Command | What it does |
 |---|---|

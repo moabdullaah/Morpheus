@@ -77,6 +77,14 @@ s.env ??= {}; s.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS ??= "1"; s.env.VERCEL_P
 fs.writeFileSync(p, JSON.stringify(s, null, 2) + "\n");
 '@ | node -
 
+# Plain "/morpheus" slash command (plugin commands are namespaced as /morpheus:<name>).
+$cmdDir = Join-Path $HOME ".claude\commands"; New-Item -ItemType Directory -Force -Path $cmdDir | Out-Null
+$cmdFile = Join-Path $cmdDir "morpheus.md"
+if (-not (Test-Path $cmdFile) -or (Select-String -Path $cmdFile -Pattern "Installed by Morpheus" -Quiet)) {
+  Copy-Item "$Dir\plugin\templates\morpheus-command.md" $cmdFile -Force
+  Write-Host "> Added the /morpheus slash command" -ForegroundColor Green
+} else { Write-Warning "$cmdFile exists and wasn't created by Morpheus. Left it untouched." }
+
 $md = Join-Path $HOME ".claude\CLAUDE.md"
 if (-not (Test-Path $md)) { New-Item -ItemType File -Path $md -Force | Out-Null }
 if (-not (Select-String -Path $md -Pattern "BEGIN MORPHEUS" -Quiet)) {
@@ -104,4 +112,5 @@ if (-not (($userPath -split ';') | Where-Object { $_.TrimEnd('\') -ieq $bin })) 
 }
 
 Write-Host "`n  Morpheus is installed. Open a NEW terminal window and run 'morpheus' in any project folder." -ForegroundColor Cyan
+Write-Host "  In any Claude Code session (terminal, desktop app, VS Code) type /morpheus"
 Write-Host "  Then run /mcp once to log in to GitHub, Figma, Linear, Notion, Supabase, Vercel, Sentry."

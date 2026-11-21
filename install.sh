@@ -103,6 +103,12 @@ fs.writeFileSync(p, JSON.stringify(s, null, 2) + "\n");
 console.log("   ✓ readable dirs: " + s.permissions.additionalDirectories.join(", "));
 NODE
 
+# Plain "/morpheus" slash command (plugin commands are namespaced as /morpheus:<name>).
+mkdir -p "$HOME/.claude/commands"
+if [ ! -f "$HOME/.claude/commands/morpheus.md" ] || grep -q "Installed by Morpheus" "$HOME/.claude/commands/morpheus.md"; then
+  cp "$DIR/plugin/templates/morpheus-command.md" "$HOME/.claude/commands/morpheus.md" && say "Added the /morpheus slash command"
+else warn "~/.claude/commands/morpheus.md exists and wasn't created by Morpheus. Left it untouched."; fi
+
 GLOBAL_MD="$HOME/.claude/CLAUDE.md"
 touch "$GLOBAL_MD"
 if ! grep -q "BEGIN MORPHEUS" "$GLOBAL_MD"; then
@@ -130,7 +136,7 @@ cat <<'DONE'
   🧠 Morpheus is installed.
 
   • In any project:   morpheus            (new shell, or: source ~/.zshrc / ~/.bashrc)
-                      or in any Claude session just say "Morpheus, …"
+                      or in any Claude Code session type /morpheus (or just say "Morpheus, …")
   • Commands:         /morpheus:init  /morpheus:pack  /morpheus:projects  /morpheus:recall
                       /morpheus:remember  /morpheus:reflect  /morpheus:doctor  /morpheus:sync
   • Packs:            core is on everywhere; per project: /morpheus:pack add design backend …
