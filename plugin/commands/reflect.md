@@ -1,6 +1,6 @@
 ---
 description: Distill this session into Morpheus's brain (decisions, status, lessons, preferences, patterns)
-allowed-tools: Bash, Read, Write
+allowed-tools: Bash(node:*), Bash(cat:*), Read, Write
 ---
 Review this conversation and record only durable knowledge, using the brain CLI (`node "${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs"`):
 - `note decisions`: each significant decision with its reason

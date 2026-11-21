@@ -33,8 +33,9 @@ DEPS="$DIR/plugin/dependencies.txt"
 GLOBAL_PACKS=" core $(printf "%s" "${MORPHEUS_PACKS:-}" | tr , " ") "
 say "Adding marketplaces…"
 grep '^@marketplace ' "$DEPS" | while read -r _ spec; do
-  src="${spec#*|}"
-  claude plugin marketplace add "$src" --scope user >/dev/null 2>&1 && echo "   ✓ $src" || echo "   • $src (already added)"
+  IFS='|' read -r _name repo ref <<< "$spec"
+  src="$repo${ref:+#$ref}"   # community marketplaces are pinned to an audited commit
+  claude plugin marketplace add "$src" --scope user >/dev/null 2>&1 && echo "   ✓ $repo${ref:+ (pinned ${ref:0:7})}" || echo "   • $repo (already added)"
 done
 claude plugin marketplace add "$SOURCE" --scope user >/dev/null 2>&1 && echo "   ✓ morpheus ($SOURCE)" || echo "   • morpheus (already added)"
 claude plugin marketplace update >/dev/null 2>&1 || true
@@ -63,11 +64,17 @@ fi
 say "Creating the brain at ~/.morpheus…"
 node "$DIR/plugin/scripts/brain.mjs" path >/dev/null
 
+# Cross-project read access is opt-in: only folders you name (or confirm) are added.
 PROJECT_DIRS="${MORPHEUS_PROJECTS:-}"
-if [ -z "$PROJECT_DIRS" ]; then
+if [ -z "$PROJECT_DIRS" ] && [ -t 0 ]; then
+  found=""
   for d in "$HOME/projects" "$HOME/Projects" "$HOME/code" "$HOME/Code" "$HOME/dev" "$HOME/src" "$HOME/Developer" "$HOME/repos" "$HOME/workspace"; do
-    [ -d "$d" ] && PROJECT_DIRS="$PROJECT_DIRS $d"
+    [ -d "$d" ] && found="$found $d"
   done
+  if [ -n "$found" ]; then
+    printf '\n  Let Morpheus read your other projects in:%s ? [y/N] ' "$found"
+    read -r ans; [[ "$ans" =~ ^[Yy] ]] && PROJECT_DIRS="$found"
+  fi
 fi
 
 say "Updating ~/.claude/settings.json…"
@@ -81,10 +88,16 @@ s.permissions ??= {};
 const brain = path.join(os.homedir(), ".morpheus");
 const dirs = [brain, ...(process.env.MORPHEUS_DIRS || "").split(/\s+/).filter(Boolean)];
 s.permissions.additionalDirectories = [...new Set([...(s.permissions.additionalDirectories || []), ...dirs])];
-const allow = ["Read(~/.morpheus/**)", "Edit(~/.morpheus/**)", "Write(~/.morpheus/**)", "mcp__plugin_morpheus_sequential-thinking", "mcp__plugin_morpheus_shadcn"];
+// Read-only by default: brain writes go through brain.mjs (dated, secret-guarded).
+const allow = ["Read(~/.morpheus/**)", "mcp__plugin_morpheus_sequential-thinking", "mcp__plugin_morpheus_shadcn"];
 s.permissions.allow = [...new Set([...(s.permissions.allow || []), ...allow])];
-s.permissions.deny = [...new Set([...(s.permissions.deny || []), "Read(**/.env)", "Read(**/.env.*)"])];
+// Credential files are never readable, in any project (the Morpheus guard hook also covers Bash access).
+const deny = ["Read(**/.env)", "Read(**/.env.local)", "Read(**/.env.*.local)", "Read(**/.env.production)", "Read(**/.env.development)", "Read(**/.env.test)",
+  "Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.gnupg/**)", "Read(~/.kube/**)", "Read(~/.docker/config.json)", "Read(~/.config/gh/**)",
+  "Read(~/.netrc)", "Read(~/.npmrc)", "Read(~/.pypirc)", "Read(~/.pgpass)", "Read(~/.git-credentials)", "Read(**/*.pem)", "Read(**/*.key)", "Read(**/id_rsa*)", "Read(**/id_ed25519*)"];
+s.permissions.deny = [...new Set([...(s.permissions.deny || []), ...deny])];
 s.env ??= {}; s.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS ??= "1";
+s.env.VERCEL_PLUGIN_TELEMETRY ??= "off";   // the Vercel plugin sends usage telemetry unless disabled
 fs.writeFileSync(p, JSON.stringify(s, null, 2) + "\n");
 console.log("   ✓ readable dirs: " + s.permissions.additionalDirectories.join(", "));
 NODE

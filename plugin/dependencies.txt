@@ -1,13 +1,18 @@
 # Morpheus dependencies, grouped into packs.
 #   core      → enabled in every project (lean: ~3k tokens of always-on context)
 #   others    → installed but OFF; switch on per project with /morpheus:pack <name>
-# Format:  <pack> <plugin@marketplace>      |  @marketplace <name>|<github owner/repo>
+# Format:  <pack> <plugin@marketplace>   |   @marketplace <name>|<owner/repo>[|<pinned commit>]
 # Token figures = measured always-on context cost per session (claude plugin details).
+#
+# Supply-chain policy:
+#   - Anthropic-maintained marketplaces track latest (reviewed upstream).
+#   - Community marketplaces are PINNED to a commit that was audited (no hooks, no MCP servers,
+#     no runtime network calls at audit time). Bump pins only via tools/review-update.sh.
 
 @marketplace claude-plugins-official|anthropics/claude-plugins-official
 @marketplace anthropic-agent-skills|anthropics/skills
-@marketplace claude-code-workflows|wshobson/agents
-@marketplace ui-ux-pro-max-skill|nextlevelbuilder/ui-ux-pro-max-skill
+@marketplace claude-code-workflows|wshobson/agents|42203085cfc5736204bf0f6d436dff7e1da0bf3f
+@marketplace ui-ux-pro-max-skill|nextlevelbuilder/ui-ux-pro-max-skill|2de1134dc4d1cfe112934611ae5803ae17a1bd7e
 
 # core: one tool per job, always on
 core superpowers@claude-plugins-official              # process spine: brainstorm, plans, subagents, TDD, debug, verify (~850)
@@ -52,6 +57,13 @@ backend deployment-validation@claude-code-workflows   # (~210)
 pm conductor@claude-code-workflows                    # tracked tracks / specs (~560)
 pm linear@claude-plugins-official                     # Linear MCP (0)
 pm notion@claude-plugins-official                     # Notion MCP (~210)
+
+# security: app security tooling (core already has security-guidance + the Morpheus guard)
+security claude-security@claude-plugins-official      # deep vuln scan of your code, findings challenged (~780; hooks)
+security semgrep@claude-plugins-official              # SAST rules while coding (~450; hooks + MCP, needs semgrep login)
+security security-scanning@claude-code-workflows      # SAST, dependency & container scanning, OWASP (~750)
+security backend-api-security@claude-code-workflows   # authN/Z, rate limiting, input validation (~200)
+security frontend-mobile-security@claude-code-workflows # XSS, CSRF, CSP, secure storage (~320)
 
 # ops: hosting and monitoring
 ops vercel@claude-plugins-official                    # Vercel MCP + hooks (~4220)

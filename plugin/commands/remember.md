@@ -1,7 +1,7 @@
 ---
 description: Save a fact, decision, preference, lesson or pattern into Morpheus's brain
 argument-hint: "<what to remember>"
-allowed-tools: Bash
+allowed-tools: Bash(node:*), Bash(cat:*), Write
 ---
 Classify "$ARGUMENTS" and store it with exactly one brain CLI call:
 - user preference → `node "${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs" pref "…"`

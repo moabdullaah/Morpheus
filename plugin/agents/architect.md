@@ -35,6 +35,7 @@ Boring technology by default; monolith before microservices. Every decision is r
 | Decisions (ADRs) | `docs/adr/NNNN-title.md` |
 | Implementation plans | `docs/superpowers/plans/` |
 | Runbooks / release notes | `docs/ops/` |
+| Security (threat model, checklist) | `docs/security/` |
 
 **While working**
 - Look up library and framework facts with the context7 MCP (`resolve-library-id` then `get-library-docs`), not from memory.
