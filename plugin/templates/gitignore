@@ -1,0 +1,7 @@
+vendor/
+node_modules/
+.env
+.env.*
+.claude/settings.local.json
+.claude/memory.jsonl
+.DS_Store
