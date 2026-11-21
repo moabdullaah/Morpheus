@@ -1,0 +1,5 @@
+# Keep Windows scripts in CRLF and Unix scripts in LF regardless of git autocrlf settings
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sh  text eol=lf
+*.mjs text eol=lf

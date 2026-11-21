@@ -1,5 +1,6 @@
 # Morpheus installer for Windows (PowerShell). Installs Morpheus for every project (user scope).
-# Usage:  .\install.ps1     Optional env: $env:MORPHEUS_SOURCE="owner/morpheus"; $env:MORPHEUS_PROJECTS="C:\code;D:\work"
+# Usage:  install.cmd   (from Command Prompt / double-click)   or   powershell -ExecutionPolicy Bypass -File install.ps1
+# Optional env: $env:MORPHEUS_SOURCE="owner/morpheus"; $env:MORPHEUS_PROJECTS="C:\code;D:\work"
 $ErrorActionPreference = "Continue"
 $Dir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -88,10 +89,17 @@ Morpheus. Global memory lives in ``~/.morpheus/``. Use it to reuse knowledge acr
 "@
 }
 
-if (-not (Test-Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force | Out-Null }
-if (-not (Select-String -Path $PROFILE -Pattern "function morpheus" -Quiet)) {
-  Add-Content $PROFILE "`n# Morpheus`nfunction morpheus { claude --agent morpheus:morpheus --add-dir `"`$HOME\.morpheus`" @args }"
+# 'morpheus' command for Command Prompt, PowerShell and Windows Terminal: a small .cmd launcher on the user PATH.
+$bin = Join-Path $HOME ".local\bin"
+New-Item -ItemType Directory -Force -Path $bin | Out-Null
+$launcher = "@echo off`r`nclaude --agent morpheus:morpheus --add-dir `"%USERPROFILE%\.morpheus`" %*`r`n"
+Set-Content -Path (Join-Path $bin "morpheus.cmd") -Value $launcher -Encoding ASCII -NoNewline
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if (-not $userPath) { $userPath = "" }
+if (-not (($userPath -split ';') | Where-Object { $_.TrimEnd('\') -ieq $bin })) {
+  [Environment]::SetEnvironmentVariable("Path", (($userPath.TrimEnd(';') + ";" + $bin).TrimStart(';')), "User")
+  Write-Host "> Added $bin to your user PATH (for the 'morpheus' command)" -ForegroundColor Green
 }
 
-Write-Host "`n  Morpheus is installed. Open a new terminal and run 'morpheus' in any project." -ForegroundColor Cyan
+Write-Host "`n  Morpheus is installed. Open a NEW terminal window and run 'morpheus' in any project folder." -ForegroundColor Cyan
 Write-Host "  Then run /mcp once to log in to GitHub, Figma, Linear, Notion, Supabase, Vercel, Sentry."

@@ -5,13 +5,22 @@ project on your machine the same orchestrator, a 14-member specialist crew, buil
 switchable packs, and one shared memory that grows with each project you build.
 
 ## Install (once per machine)
+**Mac / Linux**
 ```bash
 git clone https://github.com/moabdullaah/morpheus ~/.morpheus-src
-cd ~/.morpheus-src && ./install.sh          # Windows: .\install.ps1
+cd ~/.morpheus-src && ./install.sh
 ```
-Options: `MORPHEUS_PACKS="build,design"` turns packs on everywhere · `MORPHEUS_PROJECTS="$HOME/code $HOME/work"`
-sets readable code folders · `TWENTYFIRST_API_KEY=…` adds the 21st.dev Magic MCP.
+**Windows** (Command Prompt)
+```bat
+git clone https://github.com/moabdullaah/morpheus "%USERPROFILE%\.morpheus-src"
+cd /d "%USERPROFILE%\.morpheus-src" && install.cmd
+```
+(PowerShell: `git clone https://github.com/moabdullaah/morpheus $HOME\.morpheus-src; cd $HOME\.morpheus-src; .\install.cmd`)
+
+Options: `MORPHEUS_PACKS="build,design"` turns packs on everywhere · `MORPHEUS_PROJECTS` sets readable code folders
+(`;`-separated on Windows) · `TWENTYFIRST_API_KEY=…` adds the 21st.dev Magic MCP.
 Requires Claude Code, Node 18+ and git. Recommended: `uv` (Spec Kit), `python3`, `gh`, `rg`.
+Then open a **new** terminal (so the `morpheus` command is on your PATH).
 
 ## Use it anywhere
 ```bash
