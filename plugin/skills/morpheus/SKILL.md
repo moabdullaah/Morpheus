@@ -23,7 +23,7 @@ work was done or verified when it wasn't.
 |---|---|---|
 | **Quick** | 1-2 files, clear intent | Do it → verify → done. No ceremony. |
 | **Fix** | Bug, failure, regression | `superpowers:systematic-debugging` → failing test first → fix → verify |
-| **Feature** | Multi-file change in an existing app | `superpowers:brainstorming` → `superpowers:writing-plans` → build with crew via `superpowers:subagent-driven-development` → **reviewer** → verify |
+| **Feature** | Multi-file change in an existing app | `superpowers:brainstorming` → `superpowers:writing-plans` → build with crew via `superpowers:subagent-driven-development` → **reviewer** (+ **sentinel** if security-sensitive) → verify |
 | **Product** | New app/tool or major capability | The phases below, each producing its artifact |
 | **Explore** | "What's the best way to…?" | **researcher** (+ **architect** if structural) → recommendation → stop |
 
@@ -31,15 +31,15 @@ work was done or verified when it wasn't.
 1. **Frame**: **strategist** (+ `before-you-build`) → `docs/product/PRD.md`. *Gate: MVP scope agreed.*
 2. **Spec**: Spec Kit (`/morpheus:init` if `.specify/` is missing): `/speckit-constitution` → `/speckit-specify` → `/speckit-clarify` → `/speckit-plan`. *Gate: no open clarifications.*
 3. **Experience**: in parallel: **ux-researcher** (flows, IA) + **design-director** (`design-system/MASTER.md`) + **copywriter** (voice, key copy). *Gate: user approves the direction.*
-4. **Architecture**: **architect** → C4 in `docs/architecture/` + ADRs, and **security-engineer** → threat model in `docs/security/threat-model.md`. *Gate: stack, data model and top threats/mitigations agreed.*
+4. **Architecture**: **architect** → C4 in `docs/architecture/` + ADRs, and **sentinel** → threat model in `docs/security/threat-model.md`. *Gate: stack, data model and top threats/mitigations agreed.*
 5. **Plan**: **delivery-lead** → milestones and parallelizable tasks (or `/speckit-tasks` + `/speckit-analyze`).
 6. **Build**: milestone by milestone. Fan out **frontend-engineer** / **backend-engineer** / **ai-engineer** on non-overlapping tasks, using `superpowers:using-git-worktrees` for parallel tracks.
-7. **Prove**: **qa-engineer** (tests + browser), **reviewer** and **security-engineer** (`/morpheus:secure audit`) in parallel. Fix all Critical, High and Important findings.
+7. **Prove**: **qa-engineer** (tests + browser), **reviewer** and **sentinel** (`/morpheus:sentinel review`) in parallel. Fix all Critical, High and Important findings.
 8. **Ship**: **devops-engineer** (CI incl. `templates/security` workflow, deploy, Sentry, security headers) → `commit-commands` / GitHub → `superpowers:finishing-a-development-branch`.
 
 ## 3. The crew (`morpheus:<name>`)
 strategist · delivery-lead · ux-researcher · design-director · copywriter · architect ·
-frontend-engineer · backend-engineer · ai-engineer · qa-engineer · reviewer · security-engineer · devops-engineer · researcher
+frontend-engineer · backend-engineer · ai-engineer · qa-engineer · reviewer · sentinel · devops-engineer · researcher
 
 **Dispatching**
 - Run independent work **in parallel**: several Agent calls in one message. Never let two agents edit the same files at once.
@@ -48,6 +48,17 @@ frontend-engineer · backend-engineer · ai-engineer · qa-engineer · reviewer 
 - Crew members return a fixed report (Result / Changes / Verification / Decisions / Open questions / Memory candidates).
   Merge the reports, resolve conflicts yourself, and re-dispatch on gaps. Subagents can't spawn subagents, so you own the fan-out.
 - Don't delegate what is faster to do yourself (a single small edit, a quick lookup).
+
+### Sentinel, the dedicated security agent
+Sentinel owns security for everything Morpheus builds. Dispatch it **without being asked** when work touches auth,
+sessions, roles, API routes, server actions, middleware, schema/RLS/migrations, payments, webhooks, uploads, secrets,
+AI/LLM features, CORS/CSP/headers, CI workflows or new dependencies:
+- During the build: **review** mode on the diff, before you report the feature as done.
+- At the Architecture gate: **threat-model** mode. At the Prove gate: **audit** mode (parallel instances for big apps).
+- After fixes: **verify** mode on the SEC ids. Before first deploy: **harden** mode (CI + headers).
+Its gate verdict is binding: **FAIL** means not done. Open Criticals and Highs are either fixed with a regression test or
+explicitly accepted by the user (recorded in `docs/security/findings.md`). A Stop-hook tripwire reminds you if
+security-sensitive files changed without a Sentinel review. The user's command is `/morpheus:sentinel`.
 
 ## 4. Tool map (one owner per job)
 | Job | Owner | Escalate to (pack) |
@@ -59,7 +70,7 @@ frontend-engineer · backend-engineer · ai-engineer · qa-engineer · reviewer 
 | Library facts | **context7**, always, never memory | |
 | Verification | Playwright MCP | build: chrome-devtools-mcp, tdd-workflows |
 | Review | **reviewer** agent, `/code-review` | build: pr-review-toolkit |
-| Security | **security-engineer**, `/morpheus:secure`, security-guidance, Morpheus guard | security: claude-security, semgrep, security-scanning, backend-api-security, frontend-mobile-security |
+| Security | **sentinel**, `/morpheus:sentinel`, security-guidance, Morpheus guard | security: claude-security, semgrep, security-scanning, backend-api-security, frontend-mobile-security |
 | Ship | commit-commands, GitHub MCP | ops: Vercel, Sentry |
 
 If a needed tool belongs to a pack that's off, say so and offer `/morpheus:pack add <pack>`. Don't silently work without it.
@@ -68,7 +79,7 @@ If a needed tool belongs to a pack that's off, say so and offer `/morpheus:pack 
 - Typecheck, lint and tests run, and the **output is shown**.
 - UI: Playwright screenshots at 375px and 1280px that you actually looked at; keyboard path works; AA contrast; dark mode.
 - Security: no secrets in code, logs or client bundles; authZ and ownership checks on every entry point; RLS on every table;
-  input validated at boundaries; new dependencies checked (`osv-scanner`/`pnpm audit`). Auth, payments, uploads and AI features always get a **security-engineer** pass.
+  input validated at boundaries; new dependencies checked (`osv-scanner`/`pnpm audit`). Auth, payments, uploads and AI features always get a **sentinel** pass.
 - Reviewer verdict is Approve, or all Critical and Important findings are fixed.
 - Use `superpowers:verification-before-completion` before any "it works" claim.
 

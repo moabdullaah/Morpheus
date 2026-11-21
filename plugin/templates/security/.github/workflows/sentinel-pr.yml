@@ -1,0 +1,35 @@
+# Sentinel on every pull request: AI security review of the diff, posted as PR comments.
+# Requires repository secret CLAUDE_API_KEY (an Anthropic API key with a spend limit).
+#
+# ⚠ The underlying action is NOT hardened against prompt injection. Run it only on trusted PRs:
+#   Settings → Actions → General → "Require approval for all external contributors".
+#   The `if:` below also skips PRs from forks.
+name: sentinel
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: sentinel-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
+      # Pinned to an audited commit of anthropics/claude-code-security-review.
+      - uses: anthropics/claude-code-security-review@0c6a49f1fa56a1d472575da86a94dbc1edb78eda
+        with:
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          comment-pr: true
+          upload-results: true
+          exclude-directories: "node_modules,dist,.next,coverage,vendor"
+          custom-security-scan-instructions: .github/sentinel/scan-instructions.txt
+          false-positive-filtering-instructions: .github/sentinel/false-positives.txt

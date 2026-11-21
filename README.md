@@ -27,7 +27,7 @@ Or say **"Morpheus, …"** in any Claude Code session.
 | `/morpheus:recall <question>` | Answer from the brain plus code across all projects, with sources |
 | `/morpheus:remember <fact>` | Save a preference / decision / lesson / pattern |
 | `/morpheus:reflect` | Distill the session into the brain, then sync |
-| `/morpheus:secure [audit\|harden]` | Threat model, OWASP audit, secret/dependency/SAST scans, security CI |
+| `/morpheus:sentinel [review\|audit\|threat-model\|harden\|verify\|status]` | Sentinel, the dedicated security agent (see below) |
 | `/morpheus:doctor` | Health check: tools, packs, brain, registry, security posture |
 | `/morpheus:sync` | Commit and push the brain to its private git remote |
 
@@ -40,7 +40,7 @@ Architecture → Plan → Build → Prove → Ship, with a gate at each phase) �
 
 ### 2. The crew: 14 specialists, one protocol
 strategist · delivery-lead · ux-researcher · design-director · copywriter · architect · frontend-engineer ·
-backend-engineer · ai-engineer · qa-engineer · reviewer · security-engineer · devops-engineer · researcher
+backend-engineer · ai-engineer · qa-engineer · reviewer · sentinel · devops-engineer · researcher
 
 Every crew member reads the same inputs (project CLAUDE.md, brain brief, artifact map), writes to the same
 artifact locations, and returns the same report: *Result · Changes · Verification · Decisions · Open
@@ -91,10 +91,32 @@ Morpheus suggests packs from the detected stack (e.g. Next.js → design, Supaba
   and is private to your user (700/600).
 - **Prompt-injection hygiene**: memory and other projects' files reach Claude marked as untrusted data. Other
   projects are read-only, and cross-project access is opt-in.
-- **Secure apps by default**: threat model at the Architecture gate, security audit at the Prove gate,
-  `/morpheus:secure` installs gitleaks + OSV + CodeQL CI and Dependabot, and an opt-in security pack.
+- **Secure apps by default**: Sentinel (below), plus an opt-in security pack.
 
-### 6. Quality gates
+### 6. Sentinel: the dedicated security agent for what you build
+Sentinel owns the security of every app Morpheus builds, from design to every pull request.
+
+| Mode | When | Output |
+|---|---|---|
+| `threat-model` | Architecture gate | `docs/security/threat-model.md` (assets, trust boundaries, STRIDE, mitigations) |
+| `review` (default) | Any security-sensitive change | Proven findings on the diff, fixes, regression tests, gate verdict |
+| `audit` | Prove gate / before launch | Whole-app audit; big apps get parallel Sentinels per area |
+| `verify` | After fixes | Re-tests `SEC-…` findings |
+| `harden` | Before first deploy | CI: gitleaks + OSV + CodeQL + **Sentinel PR review**, Dependabot, security headers |
+| `status` | Anytime | Open findings by severity, accepted risks, last review |
+
+- **Proves, doesn't guess**: Recon → Model → Hunt → **Prove** → Fix → **Regress** → Record. Every finding is
+  confirmed with an end-to-end trace or a failing test, and every Critical or High fix gets a security regression test.
+- **Stack-aware knowledge base** (`morpheus:sentinel` skill): checklists for Next.js, Supabase RLS, auth, APIs,
+  payments and webhooks, LLM/AI (OWASP LLM Top 10), uploads and SSRF, headers and CSP, supply chain and secrets. It loads only what's relevant.
+- **Automatic**: Morpheus dispatches Sentinel on its own for auth, API, data, payments, upload, AI, CI and dependency
+  changes. If it doesn't, a Stop-hook **tripwire** notices security-sensitive edits and triggers a review (`MORPHEUS_SENTINEL=0` to disable).
+- **On every PR**: `harden` installs a GitHub workflow running Anthropic's security review action (pinned) with
+  Sentinel's project-specific instructions and false-positive rules. It runs on trusted PRs only.
+- **Ledger**: `docs/security/findings.md` tracks every finding (`SEC-NNN`: severity, confidence, status, fix,
+  regression test, accepted risks). **Gate verdict**: PASS / PASS WITH CONDITIONS / FAIL. FAIL means not done.
+
+### 7. Quality gates
 Nothing is "done" without shown typecheck, lint and test output; Playwright screenshots at 375 and 1280px for UI;
 secrets, authZ and RLS checks; and a reviewer verdict.
 
@@ -111,8 +133,9 @@ node plugin/scripts/brain.mjs <command>
 .claude-plugin/marketplace.json     this repo is a plugin marketplace
 plugin/
   skills/morpheus/SKILL.md          operating system: modes, crew dispatch, tool map, gates, memory API
-  agents/                           morpheus + 14 crew members (shared protocol)
-  commands/                         init, pack, projects, recall, remember, reflect, secure, doctor, sync
+  skills/sentinel/                  security knowledge base: 10 stack checklists + ledger/threat-model templates
+  agents/                           morpheus + 14 crew members incl. sentinel (shared protocol)
+  commands/                         init, pack, projects, recall, remember, reflect, sentinel, doctor, sync
   hooks/hooks.json                  PreToolUse (guard) · SessionStart (load) · Stop (capture) · SessionEnd (autosave)
   scripts/brain.mjs                 zero-dependency brain engine
   dependencies.txt                  marketplaces + packs (edit this to grow Morpheus)

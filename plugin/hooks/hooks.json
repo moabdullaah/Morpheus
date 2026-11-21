@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs\" capture-check",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs\" stop",
             "timeout": 15
           }
         ]

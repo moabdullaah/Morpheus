@@ -366,27 +366,59 @@ function sessionStart() {
   if (lessons.length) out.push("\n## Recent lessons\n" + lessons.join("\n"));
   process.stdout.write(out.join("\n") + "\n");
 }
-function captureCheck() {
-  // Stop hook: after a substantial session with no memory update, ask Morpheus once to record what matters.
-  if (process.env.MORPHEUS_AUTOCAPTURE === "0") return;
-  let input = {}; try { input = JSON.parse(readStdin() || "{}"); } catch { return; }
-  if (input.stop_hook_active || !input.session_id || !input.transcript_path) return;
-  const flag = path.join(STATE, `captured-${slugify(input.session_id)}`);
-  if (exists(flag)) return;
-  let edits = 0, brainWrites = 0;
-  for (const line of read(input.transcript_path).split("\n")) {
+// Paths whose changes deserve a Sentinel review.
+const SECURITY_SENSITIVE = /(^|[\/._-])(auth|login|logout|signin|signup|session|oauth|sso|jwt|token|password|passw|mfa|otp|permission|role|rbac|acl|admin|middleware|api|route\.[jt]sx?|actions?\.[jt]sx?|server|webhook|stripe|payment|checkout|billing|invoice|upload|storage|migrations?|schema\.prisma|policies|policy|rls|supabase|crypto|encrypt|cors|csp|headers|next\.config|vercel\.json|package\.json|Dockerfile|\.github[\/]workflows|llm|prompt|agent|tool|rag|embedding)([\/._-]|$)|\.sql$/i;
+
+// CamelCase component/module names, e.g. LoginForm.tsx, useSession.ts, AdminPanel.tsx, StripeCheckout.tsx
+const SECURITY_SENSITIVE_CAMEL = /(Auth|Login|Logout|SignIn|Signin|SignUp|Signup|Session|Password|Permission|Role|Admin|Checkout|Payment|Billing|Stripe|Upload|Webhook|Token)[A-Z.]/;
+
+function readTranscript(p) {
+  const edits = []; let brainWrites = 0, sentinelRan = false;
+  for (const line of read(p).split("\n")) {
     if (!line.includes('"tool_use"')) continue;
     let ev; try { ev = JSON.parse(line); } catch { continue; }
     for (const c of ev?.message?.content || []) {
       if (c?.type !== "tool_use") continue;
       const fp = c.input?.file_path || c.input?.notebook_path || "";
-      if (EDIT_TOOLS.has(c.name)) (fp && under(fp, BRAIN) ? brainWrites++ : edits++);
+      if (EDIT_TOOLS.has(c.name)) { if (fp && under(fp, BRAIN)) brainWrites++; else if (fp) edits.push(fp); }
       if (c.name === "Bash" && /brain\.mjs"?\s+(note|lesson|pref|pattern)/.test(c.input?.command || "")) brainWrites++;
+      if ((c.name === "Agent" || c.name === "Task") && /sentinel/i.test(c.input?.subagent_type || "")) sentinelRan = true;
+      if (c.name === "Skill" && /sentinel/i.test(c.input?.skill || c.input?.name || "")) sentinelRan = true;
     }
   }
-  if (edits < CAPTURE_MIN_EDITS || brainWrites > 0) return;
+  return { edits, brainWrites, sentinelRan };
+}
+function sentinelReason(t, sessionId) {
+  if (process.env.MORPHEUS_SENTINEL === "0" || t.sentinelRan) return null;
+  const flag = path.join(STATE, `sentinel-${slugify(sessionId)}`);
+  if (exists(flag)) return null;
+  const hot = [...new Set(t.edits.filter((f) => { const n = f.replace(/\\/g, "/"); return SECURITY_SENSITIVE.test(n) || SECURITY_SENSITIVE_CAMEL.test(n); }))];
+  if (!hot.length) return null;
   fs.mkdirSync(STATE, { recursive: true }); fs.writeFileSync(flag, new Date().toISOString());
-  process.stdout.write(JSON.stringify({ decision: "block", reason: `Morpheus memory checkpoint (${edits} file edits this session, no brain update yet). Record only durable facts with the brain CLI (node "${SELF}"): \`note decisions|status|gotchas "<text>"\` for this project, \`lesson "<text>"\` if it helps other projects, \`pref "<text>"\` for any new user preference. If nothing is worth keeping, reply "nothing to record". One short line to the user, then stop.` }));
+  const list = hot.slice(0, 8).map((f) => path.basename(path.dirname(f)) + "/" + path.basename(f)).join(", ");
+  return `Sentinel tripwire: this session changed security-sensitive code (${list}${hot.length > 8 ? ", …" : ""}) and no security review ran. Dispatch the \`morpheus:sentinel\` agent in **review** mode on these changes (brief: changed files, base branch, brain CLI path node "${SELF}"). Report its gate verdict (PASS / PASS WITH CONDITIONS / FAIL) and findings table to the user. If the user already declined a review for this work, say so in one line and stop.`;
+}
+function captureReason(t, sessionId) {
+  if (process.env.MORPHEUS_AUTOCAPTURE === "0") return null;
+  const flag = path.join(STATE, `captured-${slugify(sessionId)}`);
+  if (exists(flag) || t.edits.length < CAPTURE_MIN_EDITS || t.brainWrites > 0) return null;
+  fs.mkdirSync(STATE, { recursive: true }); fs.writeFileSync(flag, new Date().toISOString());
+  return `Morpheus memory checkpoint (${t.edits.length} file edits this session, no brain update yet). Record only durable facts with the brain CLI (node "${SELF}"): \`note decisions|status|gotchas "<text>"\` for this project, \`lesson "<text>"\` if it helps other projects, \`pref "<text>"\` for any new user preference. If nothing is worth keeping, reply "nothing to record". One short line to the user, then stop.`;
+}
+function stopHook() {
+  // One Stop hook, at most one interruption per stop: security first, then memory.
+  let input = {}; try { input = JSON.parse(readStdin() || "{}"); } catch { return; }
+  if (input.stop_hook_active || !input.session_id || !input.transcript_path) return;
+  const t = readTranscript(input.transcript_path);
+  const reason = sentinelReason(t, input.session_id) || captureReason(t, input.session_id);
+  if (reason) process.stdout.write(JSON.stringify({ decision: "block", reason }));
+}
+function kb(topic) {
+  const dir = path.join(PLUGIN_ROOT, "skills", "sentinel");
+  if (!topic) { console.log(read(path.join(dir, "SKILL.md")).replace(/^---[\s\S]*?---\n/, "")); return; }
+  const f = path.join(dir, "references", `${slugify(topic)}.md`);
+  if (!exists(f)) { console.error(`No topic "${topic}". Topics: ${fs.readdirSync(path.join(dir, "references")).map((x) => x.replace(/\.md$/, "")).join(", ")}`); process.exit(1); }
+  console.log(read(f));
 }
 
 // ---------- main ----------
@@ -403,12 +435,14 @@ const HELP = `Morpheus brain CLI
   pattern <name> < file.md    save a reusable pattern
   pack [list|add|remove|suggest] [packs…]   per-project plugin packs
   scan                        check the brain for leaked secrets
+  kb [topic]                  Sentinel security knowledge base (no topic = index)
   register [path] · prune · sync · doctor · path`;
 try {
   ensureBrain();
   switch (cmd) {
     case "session-start": sessionStart(); break;
-    case "capture-check": captureCheck(); break;
+    case "stop": case "capture-check": stopHook(); break;
+    case "kb": kb(args[0]); break;
     case "guard": guardTool(); break;
     case "scan": process.exitCode = scan().length ? 1 : 0; break;
     case "autosave": sync({ quiet: true }); break;
@@ -434,5 +468,5 @@ try {
   }
 } catch (err) {
   // Hooks must never break a session.
-  if (!["session-start", "capture-check", "autosave", "guard"].includes(cmd)) { console.error(String(err?.stack || err)); process.exitCode = 1; }
+  if (!["session-start", "stop", "capture-check", "autosave", "guard"].includes(cmd)) { console.error(String(err?.stack || err)); process.exitCode = 1; }
 }

@@ -15,7 +15,7 @@ This file lists what can go wrong and what defends against it.
 | 6 | **Over-broad access**: Morpheus reading every folder on disk | Cross-project access is **opt-in** (installer asks; `MORPHEUS_PROJECTS` to set). Only `~/.morpheus` is added by default, and it's read-only. Writes go through the CLI. | Folders you approve are fully readable. |
 | 7 | **Option/command injection in Morpheus itself** | The brain CLI uses `execFileSync` (no shell); search passes queries as `-F -e <q> --` with `--no-config`; registry paths are never interpolated into shell strings. | None known. |
 | 8 | **Telemetry / data egress** | Vercel plugin telemetry disabled (`VERCEL_PLUGIN_TELEMETRY=off`). Integration packs (Figma, Linear, Notion, Vercel, Sentry) are opt-in per project. | Remote MCP servers you enable see what you send them. |
-| 9 | **Insecure apps built by Morpheus** | security-engineer crew member (STRIDE threat model, OWASP/ASVS audit). Threat model at the Architecture gate and security audit at the Prove gate. `/morpheus:secure` adds gitleaks, OSV and CodeQL CI plus Dependabot. Opt-in security pack (claude-security, semgrep…). | Automated review finds a lot, not everything. Get human review for high-stakes apps. |
+| 9 | **Insecure apps built by Morpheus** | Sentinel, the dedicated security agent (STRIDE threat model, OWASP/ASVS audit). Threat model at the Architecture gate and security audit at the Prove gate. `/morpheus:sentinel harden` adds gitleaks, OSV and CodeQL CI, a Sentinel AI review on every trusted PR, and Dependabot. A Stop-hook tripwire catches unreviewed security-sensitive changes. Findings are proven, regression-tested and tracked in a ledger. Opt-in security pack (claude-security, semgrep…). | Automated review finds a lot, not everything. Get human review for high-stakes apps. |
 
 ## Audit performed (at the pinned commits)
 - **wshobson/agents** (plugins used by Morpheus) and **ui-ux-pro-max**: no hooks, no MCP servers, no runtime network calls.
@@ -31,7 +31,8 @@ This file lists what can go wrong and what defends against it.
 | `MORPHEUS_AUTOCAPTURE=0` | Disable the end-of-session memory checkpoint |
 | `~/.morpheus/.state/guard.log` | Every guard decision, with timestamp |
 | `/morpheus:doctor` | Checks brain permissions, secrets, remote visibility, guard status and scanners |
-| `/morpheus:secure` | Security audit and hardening for the current project |
+| `/morpheus:sentinel` | Sentinel: review / audit / threat-model / harden / verify / status |
+| `MORPHEUS_SENTINEL=0` | Disable the Sentinel tripwire (Stop hook) |
 
 ## Reporting
 Found a hole? Open a private security advisory on this repository rather than a public issue.

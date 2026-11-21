@@ -1,0 +1,6 @@
+Treat these as NOT vulnerabilities unless there is a concrete bypass:
+- The Supabase anon key and NEXT_PUBLIC_SUPABASE_URL being public (security relies on RLS).
+- Test files, fixtures and seed scripts using obvious dummy credentials (e.g. "test", "password123" in *.test.* or seed files).
+- Generic hardening advice without an exploitable path (missing headers are Low unless they enable an attack).
+- Rate limiting suggestions on endpoints that are already behind authentication and are cheap.
+- Theoretical issues in code paths that are unreachable from any entry point.

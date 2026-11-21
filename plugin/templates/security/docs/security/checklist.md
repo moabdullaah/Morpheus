@@ -1,6 +1,6 @@
 # Security checklist
 
-Tick these before each release. Morpheus's security-engineer keeps this file current.
+Tick these before each release. Morpheus's sentinel keeps this file current.
 
 ## Secrets
 - [ ] No secrets in code, git history, logs, or client bundles (`NEXT_PUBLIC_*` holds only public values)
