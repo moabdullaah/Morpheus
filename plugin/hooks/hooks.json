@@ -1,12 +1,14 @@
 {
   "hooks": {
     "SessionStart": [
-      {
-        "matcher": "startup|resume|clear|compact",
-        "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs\" session-start", "timeout": 15 }
-        ]
-      }
+      { "matcher": "startup|resume|clear|compact",
+        "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs\" session-start", "timeout": 15 }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs\" capture-check", "timeout": 15 }] }
+    ],
+    "SessionEnd": [
+      { "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs\" autosave", "timeout": 20 }] }
     ]
   }
 }

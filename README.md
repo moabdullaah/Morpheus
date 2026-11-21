@@ -1,84 +1,112 @@
 # 🧠 Morpheus
 
 **One brain for all your projects.** Morpheus is a Claude Code plugin plus an installer. It gives every
-project on your machine the same orchestrator, the same 50+ plugins and MCP servers, and one shared
-memory that grows with each project you build.
+project on your machine the same orchestrator, a 13-member specialist crew, a lean plugin core with
+switchable packs, and one shared memory that grows with each project you build.
 
 ## Install (once per machine)
 ```bash
 git clone https://github.com/<you>/morpheus ~/.morpheus-src
-cd ~/.morpheus-src && ./install.sh
+cd ~/.morpheus-src && ./install.sh          # Windows: .\install.ps1
 ```
-Windows: run `install.ps1` in PowerShell. Optional: `TWENTYFIRST_API_KEY=… ./install.sh` adds the
-21st.dev Magic UI MCP. `MORPHEUS_PROJECTS="$HOME/code $HOME/work"` sets which folders Morpheus may read.
-
-Requires Claude Code, Node.js 18+, and git. Recommended: `uv` (for Spec Kit), `python3`, `gh`.
+Options: `MORPHEUS_PACKS="build,design"` turns packs on everywhere · `MORPHEUS_PROJECTS="$HOME/code $HOME/work"`
+sets readable code folders · `TWENTYFIRST_API_KEY=…` adds the 21st.dev Magic MCP.
+Requires Claude Code, Node 18+ and git. Recommended: `uv` (Spec Kit), `python3`, `gh`, `rg`.
 
 ## Use it anywhere
 ```bash
-cd any/project
-morpheus                      # Claude Code running as Morpheus
+cd any/project && morpheus      # Claude Code running as Morpheus
 ```
-Or, inside any Claude Code session, just say **"Morpheus, …"**.
+Or say **"Morpheus, …"** in any Claude Code session.
 
 | Command | What it does |
 |---|---|
-| `/morpheus:init [description]` | Bootstrap this project: Spec Kit, CLAUDE.md, .gitignore, brain entry |
-| `/morpheus:projects [query]` | List/search every project Morpheus knows |
-| `/morpheus:recall <question>` | "How did we do auth in the shop project?" Answers from all projects |
-| `/morpheus:remember <fact>` | Save a preference, decision, lesson or pattern |
-| `/morpheus:reflect` | End of session: distill what was learned into the brain |
+| `/morpheus:init [desc]` | Bootstrap: registry, Spec Kit, CLAUDE.md with artifact map, suggested packs |
+| `/morpheus:pack [add\|remove] <packs>` | Switch plugin packs for this project (with token costs) |
+| `/morpheus:projects [q]` | List/search every known project |
+| `/morpheus:recall <question>` | Answer from the brain plus code across all projects, with sources |
+| `/morpheus:remember <fact>` | Save a preference / decision / lesson / pattern |
+| `/morpheus:reflect` | Distill the session into the brain, then sync |
+| `/morpheus:doctor` | Health check: tools, packs, brain, registry |
+| `/morpheus:sync` | Commit and push the brain to its private git remote |
 
-## How the brain works
+## How it's designed
+
+### 1. Modes sized to the task
+Morpheus picks a mode and says so: **Quick** (just do it) · **Fix** (systematic debugging, failing test first) ·
+**Feature** (brainstorm → plan → crew builds → review) · **Product** (Frame → Spec → Experience →
+Architecture → Plan → Build → Prove → Ship, with a gate at each phase) · **Explore** (sourced recommendation).
+
+### 2. The crew: 13 specialists, one protocol
+strategist · delivery-lead · ux-researcher · design-director · copywriter · architect · frontend-engineer ·
+backend-engineer · ai-engineer · qa-engineer · reviewer · devops-engineer · researcher
+
+Every crew member reads the same inputs (project CLAUDE.md, brain brief, artifact map), writes to the same
+artifact locations, and returns the same report: *Result · Changes · Verification · Decisions · Open
+questions · Memory candidates*. That lets Morpheus run them in parallel and merge the results cleanly.
+
+### 3. One owner per job, lean by default
+Plugins are grouped into packs (`plugin/dependencies.txt`). Only **core** is on everywhere (~3k tokens of
+context, down from ~32k when everything was on). The others are installed but off; switch them on per project:
+
+| Pack | Contents | ~Tokens |
+|---|---|---|
+| **core** | superpowers, ui-ux-pro-max, frontend-design, c4-architecture, before-you-build, accessibility, code-review, commit-commands, security-guidance, context7, playwright, github, typescript-lsp | 3.1k |
+| build | full-stack-orchestration, agent-teams, feature-dev, ralph-loop, tdd-workflows, pr-review-toolkit, chrome-devtools, mattpocock-skills | 7.2k |
+| design | ui-design, ui-theme-designer, superdesign, modern-web-guidance, figma | 5.3k |
+| backend | backend-development, database-design, api-scaffolding, supabase, deployment-validation | 3.2k |
+| pm | conductor, linear, notion | 0.8k |
+| ops | vercel, sentry | 5.3k |
+| meta | claude-md-management, hookify, skill-creator, plugin-dev, mcp-server-dev, document & example skills | 5.7k |
+
+Morpheus suggests packs from the detected stack (e.g. Next.js → design, Supabase → backend).
+
+### 4. Memory: markdown is the single source of truth
 ```
 ~/.morpheus/
-├── profile.md          your preferences & default stack
-├── lessons.md          cross-project lessons (dated, one line each)
-├── projects.json       registry: every project Morpheus has seen (path, remote, stack)
-├── projects/<slug>.md  per-project brief: purpose, decisions, status, gotchas
-├── patterns/           reusable solutions (auth, RLS, deploy pipelines…)
-└── memory.jsonl        knowledge graph (morpheus-memory MCP)
+├── profile.md          preferences & default stack
+├── lessons.md          dated cross-project lessons
+├── projects.json       registry (path, remote, stack, last seen)
+├── projects/<slug>.md  brief: Purpose · Stack · Key decisions · Status · Gotchas
+└── patterns/           reusable solutions, with their source project
 ```
-- **Auto-registration:** each time Claude Code starts in a project, a SessionStart hook registers the
-  project, detects its stack, and loads the project brief, other known projects, your profile and
-  recent lessons into context.
-- **Cross-project access:** the installer adds `~/.morpheus` and your code folders (`~/code`,
-  `~/projects`, …) to Claude's readable directories. Morpheus can then open any registered project
-  by absolute path to reuse its code and decisions.
-- **Sync between machines:** `cd ~/.morpheus && git init && git remote add origin <private repo>`.
-  Keep this repo private. It's your memory.
+- **One writer:** all writes go through `brain.mjs` (dated, consistent format, **refuses secrets**). Crew members
+  only *propose* memories; Morpheus decides what to keep.
+- **Auto-load:** the SessionStart hook registers the project, detects its stack, and injects a compact brief.
+- **Auto-capture:** after a heavy session (5+ file edits) with no memory update, a Stop hook asks Morpheus
+  once to record decisions, status and lessons. Turn it off with `MORPHEUS_AUTOCAPTURE=0`.
+- **Auto-save:** the SessionEnd hook commits the brain if it's a git repo. `/morpheus:sync` pushes it, so the same
+  brain works on every machine (use a **private** repo).
+- **Cross-project search:** `brain.mjs search "<q>" --code` covers the brain plus code in every registered project.
 
-## What Morpheus orchestrates
-- **Process:** Superpowers (brainstorm → plan → subagent build → verify), feature-dev, ralph-loop
-- **Spec & PM:** GitHub Spec Kit, conductor, Task Master MCP, Linear and Notion MCPs, PM/scrum agents
-- **UI/UX & design:** ui-ux-pro-max, frontend-design, ui-design, ui-theme-designer, superdesign,
-  accessibility-compliance, shadcn MCP, Figma MCP
-- **Architecture:** c4-architecture, backend-development, database-design, api-scaffolding,
-  sequential-thinking MCP, architect/API/Postgres/LLM agents
-- **Build & orchestration:** full-stack-orchestration, agent-teams, agent-orchestration
-- **Quality & ship:** code-review, pr-review-toolkit, code-simplifier, security-guidance, TDD,
-  Playwright and Chrome DevTools MCPs, GitHub, Vercel, Sentry, Supabase, context7 (live docs)
-- **33 specialist subagents** bundled as `morpheus:<name>`
+### 5. Quality gates
+Nothing is "done" without shown typecheck, lint and test output; Playwright screenshots at 375 and 1280px for UI;
+secrets, authZ and RLS checks; and a reviewer verdict.
 
-The full list is in [`dependencies.txt`](dependencies.txt). Add a line and re-run `./install.sh` to grow it.
-
-## Update
-```bash
-cd ~/.morpheus-src && git pull && ./install.sh
-claude plugin marketplace update
+## Brain CLI
+```
+node plugin/scripts/brain.mjs <command>
+  projects [q] · show <q> · search <q> [--code]
+  note <purpose|stack|decisions|status|gotchas> "<text>" · lesson "<text>" · pref "<text>" · pattern <name> < file.md
+  pack [list|add|remove|suggest] · register · prune · sync · doctor
 ```
 
 ## Layout
 ```
-.claude-plugin/marketplace.json   this repo is a plugin marketplace
-plugin/                           the morpheus plugin
-  skills/morpheus/SKILL.md        the brain's operating system (routing, memory rules)
-  agents/                         morpheus orchestrator + 33 specialists
-  commands/                       init, projects, recall, remember, reflect
-  hooks/hooks.json                SessionStart → scripts/brain.mjs
-  scripts/brain.mjs               registry / context CLI (no dependencies)
-  .mcp.json                       memory, sequential-thinking, shadcn, task-master
-  templates/                      CLAUDE.md + .gitignore for new projects
-dependencies.txt                  every plugin & marketplace Morpheus depends on
-install.sh / install.ps1          one-command setup (user scope)
+.claude-plugin/marketplace.json     this repo is a plugin marketplace
+plugin/
+  skills/morpheus/SKILL.md          operating system: modes, crew dispatch, tool map, gates, memory API
+  agents/                           morpheus + 13 crew members (shared protocol)
+  commands/                         init, pack, projects, recall, remember, reflect, doctor, sync
+  hooks/hooks.json                  SessionStart (load) · Stop (capture) · SessionEnd (autosave)
+  scripts/brain.mjs                 zero-dependency brain engine
+  dependencies.txt                  marketplaces + packs (edit this to grow Morpheus)
+  .mcp.json                         sequential-thinking, shadcn
+  templates/                        CLAUDE.md (with artifact map) + .gitignore
+install.sh / install.ps1            one-command setup (user scope)
+```
+
+## Update
+```bash
+cd ~/.morpheus-src && git pull && ./install.sh
 ```

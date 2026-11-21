@@ -1,10 +1,5 @@
 {
   "mcpServers": {
-    "morpheus-memory": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "env": { "MEMORY_FILE_PATH": "${HOME}/.morpheus/memory.jsonl" }
-    },
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
@@ -12,11 +7,6 @@
     "shadcn": {
       "command": "npx",
       "args": ["-y", "shadcn@latest", "mcp"]
-    },
-    "task-master-ai": {
-      "command": "npx",
-      "args": ["-y", "task-master-ai"],
-      "env": { "TASK_MASTER_TOOLS": "standard" }
     }
   }
 }

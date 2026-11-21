@@ -3,6 +3,7 @@
 # Usage:  ./install.sh                     (from a clone of this repo)
 #         MORPHEUS_SOURCE=owner/morpheus ./install.sh   (register the GitHub repo as the marketplace)
 #         MORPHEUS_PROJECTS="$HOME/code $HOME/work" ./install.sh   (folders Morpheus may read)
+#         MORPHEUS_PACKS="build,design" ./install.sh   (packs to switch on globally, besides core)
 set -uo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,22 +27,31 @@ command -v uv      >/dev/null || warn "uv not found: needed for Spec Kit (/morph
 command -v python3 >/dev/null || warn "python3 not found: ui-ux-pro-max's search script needs it."
 command -v gh      >/dev/null || warn "gh (GitHub CLI) not found: optional, but recommended."
 
-# 2. Marketplaces + plugins (user scope = available in every project)
+# 2. Marketplaces + plugins (user scope). Every pack is installed; only core (+ MORPHEUS_PACKS) is ON globally.
+#    Other packs are switched on per project with /morpheus:pack add <pack>.
+DEPS="$DIR/plugin/dependencies.txt"
+GLOBAL_PACKS=" core $(printf "%s" "${MORPHEUS_PACKS:-}" | tr , " ") "
 say "Adding marketplaces…"
-grep '^@marketplace ' "$DIR/dependencies.txt" | while read -r _ spec; do
+grep '^@marketplace ' "$DEPS" | while read -r _ spec; do
   src="${spec#*|}"
-  claude plugin marketplace add "$src" --scope user >/dev/null 2>&1 && echo "   ✓ $src" || echo "   • $src (already added or failed)"
+  claude plugin marketplace add "$src" --scope user >/dev/null 2>&1 && echo "   ✓ $src" || echo "   • $src (already added)"
 done
 claude plugin marketplace add "$SOURCE" --scope user >/dev/null 2>&1 && echo "   ✓ morpheus ($SOURCE)" || echo "   • morpheus (already added)"
 claude plugin marketplace update >/dev/null 2>&1 || true
 
-say "Installing plugins…"
-ok=0; bad=()
-while read -r p; do
-  [[ -z "$p" || "$p" == \#* || "$p" == @* ]] && continue
-  if claude plugin install "$p" --scope user -y >/dev/null 2>&1; then ok=$((ok+1)); else bad+=("$p"); fi
-done < <(cat "$DIR/dependencies.txt"; echo "morpheus@morpheus")
-echo "   ✓ $ok plugins installed"
+say "Installing plugins (global packs:${GLOBAL_PACKS})…"
+on=0; off=0; bad=()
+while read -r pack plugin _; do
+  [[ -z "${pack:-}" || "$pack" == \#* || "$pack" == @* || -z "${plugin:-}" ]] && continue
+  if ! claude plugin install "$plugin" --scope user -y >/dev/null 2>&1; then bad+=("$plugin"); continue; fi
+  if [[ "$GLOBAL_PACKS" == *" $pack "* ]]; then
+    claude plugin enable "$plugin" --scope user >/dev/null 2>&1; on=$((on+1))
+  else
+    claude plugin disable "$plugin" --scope user >/dev/null 2>&1; off=$((off+1))
+  fi
+done < "$DEPS"
+claude plugin install morpheus@morpheus --scope user -y >/dev/null 2>&1 && claude plugin enable morpheus@morpheus --scope user >/dev/null 2>&1 || bad+=("morpheus@morpheus")
+echo "   ✓ $on plugins on everywhere, $off installed per-project (off by default)"
 [ ${#bad[@]} -gt 0 ] && warn "Failed: ${bad[*]} (retry: claude plugin install <name> --scope user)"
 
 # 3. Optional MCP that needs a key
@@ -52,7 +62,6 @@ fi
 # 4. Brain + user settings + global CLAUDE.md + shell command
 say "Creating the brain at ~/.morpheus…"
 node "$DIR/plugin/scripts/brain.mjs" path >/dev/null
-node "$DIR/plugin/scripts/brain.mjs" projects >/dev/null
 
 PROJECT_DIRS="${MORPHEUS_PROJECTS:-}"
 if [ -z "$PROJECT_DIRS" ]; then
@@ -72,7 +81,7 @@ s.permissions ??= {};
 const brain = path.join(os.homedir(), ".morpheus");
 const dirs = [brain, ...(process.env.MORPHEUS_DIRS || "").split(/\s+/).filter(Boolean)];
 s.permissions.additionalDirectories = [...new Set([...(s.permissions.additionalDirectories || []), ...dirs])];
-const allow = ["Read(~/.morpheus/**)", "Edit(~/.morpheus/**)", "Write(~/.morpheus/**)", "mcp__plugin_morpheus_morpheus-memory", "mcp__plugin_morpheus_sequential-thinking"];
+const allow = ["Read(~/.morpheus/**)", "Edit(~/.morpheus/**)", "Write(~/.morpheus/**)", "mcp__plugin_morpheus_sequential-thinking", "mcp__plugin_morpheus_shadcn"];
 s.permissions.allow = [...new Set([...(s.permissions.allow || []), ...allow])];
 s.permissions.deny = [...new Set([...(s.permissions.deny || []), "Read(**/.env)", "Read(**/.env.*)"])];
 s.env ??= {}; s.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS ??= "1";
@@ -108,7 +117,10 @@ cat <<'DONE'
 
   • In any project:   morpheus            (new shell, or: source ~/.zshrc / ~/.bashrc)
                       or in any Claude session just say "Morpheus, …"
-  • Commands:         /morpheus:init  /morpheus:projects  /morpheus:recall  /morpheus:remember  /morpheus:reflect
+  • Commands:         /morpheus:init  /morpheus:pack  /morpheus:projects  /morpheus:recall
+                      /morpheus:remember  /morpheus:reflect  /morpheus:doctor  /morpheus:sync
+  • Packs:            core is on everywhere; per project: /morpheus:pack add design backend …
   • One-time logins:  run /mcp inside Claude → GitHub, Figma, Linear, Notion, Supabase, Vercel, Sentry
-  • Brain:            ~/.morpheus  (back it up or put it in a private git repo to sync machines)
+  • Brain:            ~/.morpheus  → sync across machines: cd ~/.morpheus && git init -b main
+                      && git remote add origin <PRIVATE repo>   then /morpheus:sync
 DONE

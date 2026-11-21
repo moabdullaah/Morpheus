@@ -16,18 +16,29 @@ if (-not $Source) {
   if ($remote -match 'github\.com[:/]([^/]+/[^/.]+)') { $Source = $Matches[1] } else { $Source = $Dir }
 }
 
+$Deps = "$Dir\plugin\dependencies.txt"
+$GlobalPacks = @("core") + @(($env:MORPHEUS_PACKS -split ',') | Where-Object { $_ })
 Write-Host "> Adding marketplaces..." -ForegroundColor Green
-Get-Content "$Dir\dependencies.txt" | Where-Object { $_ -like "@marketplace *" } | ForEach-Object {
+Get-Content $Deps | Where-Object { $_ -like "@marketplace *" } | ForEach-Object {
   $src = ($_ -split '\|')[1]; claude plugin marketplace add $src --scope user *> $null; Write-Host "   $src"
 }
 claude plugin marketplace add $Source --scope user *> $null
 claude plugin marketplace update *> $null
 
-Write-Host "> Installing plugins..." -ForegroundColor Green
-$plugins = @(Get-Content "$Dir\dependencies.txt" | Where-Object { $_ -and $_ -notmatch '^(#|@)' }) + "morpheus@morpheus"
-$failed = @()
-foreach ($p in $plugins) { claude plugin install $p --scope user -y *> $null; if ($LASTEXITCODE -ne 0) { $failed += $p } }
-Write-Host "   $($plugins.Count - $failed.Count) plugins installed"
+Write-Host "> Installing plugins (global packs: $($GlobalPacks -join ', '))..." -ForegroundColor Green
+$on = 0; $off = 0; $failed = @()
+foreach ($line in Get-Content $Deps) {
+  $l = ($line -replace '\s+#.*$', '').Trim()
+  if (-not $l -or $l.StartsWith('#') -or $l.StartsWith('@')) { continue }
+  $pack, $plugin = $l -split '\s+'
+  claude plugin install $plugin --scope user -y *> $null
+  if ($LASTEXITCODE -ne 0) { $failed += $plugin; continue }
+  if ($GlobalPacks -contains $pack) { claude plugin enable $plugin --scope user *> $null; $on++ }
+  else { claude plugin disable $plugin --scope user *> $null; $off++ }
+}
+claude plugin install morpheus@morpheus --scope user -y *> $null
+claude plugin enable morpheus@morpheus --scope user *> $null
+Write-Host "   $on plugins on everywhere, $off available per project (/morpheus:pack add <pack>)"
 if ($failed) { Write-Warning "Failed: $($failed -join ', ')" }
 
 if ($env:TWENTYFIRST_API_KEY) {
@@ -50,7 +61,7 @@ if (fs.existsSync(p)) fs.copyFileSync(p, p + ".bak-morpheus");
 s.permissions ??= {};
 const dirs = [path.join(os.homedir(), ".morpheus"), ...(process.env.MORPHEUS_DIRS || "").split("\n").filter(Boolean)];
 s.permissions.additionalDirectories = [...new Set([...(s.permissions.additionalDirectories || []), ...dirs])];
-s.permissions.allow = [...new Set([...(s.permissions.allow || []), "Read(~/.morpheus/**)", "Edit(~/.morpheus/**)", "Write(~/.morpheus/**)", "mcp__plugin_morpheus_morpheus-memory", "mcp__plugin_morpheus_sequential-thinking"])];
+s.permissions.allow = [...new Set([...(s.permissions.allow || []), "Read(~/.morpheus/**)", "Edit(~/.morpheus/**)", "Write(~/.morpheus/**)", "mcp__plugin_morpheus_sequential-thinking", "mcp__plugin_morpheus_shadcn"])];
 s.permissions.deny = [...new Set([...(s.permissions.deny || []), "Read(**/.env)", "Read(**/.env.*)"])];
 s.env ??= {}; s.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS ??= "1";
 fs.writeFileSync(p, JSON.stringify(s, null, 2) + "\n");

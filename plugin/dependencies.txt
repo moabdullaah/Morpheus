@@ -1,0 +1,67 @@
+# Morpheus dependencies, grouped into packs.
+#   core      → enabled in every project (lean: ~3k tokens of always-on context)
+#   others    → installed but OFF; switch on per project with /morpheus:pack <name>
+# Format:  <pack> <plugin@marketplace>      |  @marketplace <name>|<github owner/repo>
+# Token figures = measured always-on context cost per session (claude plugin details).
+
+@marketplace claude-plugins-official|anthropics/claude-plugins-official
+@marketplace anthropic-agent-skills|anthropics/skills
+@marketplace claude-code-workflows|wshobson/agents
+@marketplace ui-ux-pro-max-skill|nextlevelbuilder/ui-ux-pro-max-skill
+
+# core: one tool per job, always on
+core superpowers@claude-plugins-official              # process spine: brainstorm, plans, subagents, TDD, debug, verify (~850)
+core ui-ux-pro-max@ui-ux-pro-max-skill                # design intelligence: styles, palettes, fonts, UX rules (~1070)
+core frontend-design@claude-plugins-official          # distinctive, non-generic UI aesthetics (~80)
+core c4-architecture@claude-code-workflows            # architecture docs (C4) (~470)
+core before-you-build@claude-code-workflows           # idea / scope sanity check (~130)
+core accessibility-compliance@claude-code-workflows   # WCAG 2.2 (~350)
+core code-review@claude-plugins-official              # PR / diff review (~20)
+core commit-commands@claude-plugins-official          # commit / push / PR (~100)
+core security-guidance@claude-plugins-official        # security hooks (0)
+core context7@claude-plugins-official                 # live library docs (0)
+core playwright@claude-plugins-official               # real-browser verification (0)
+core github@claude-plugins-official                   # GitHub MCP (0)
+core typescript-lsp@claude-plugins-official           # TS language server (0)
+
+# build: heavier orchestration for large features and long runs
+build full-stack-orchestration@claude-code-workflows  # (~600)
+build agent-teams@claude-code-workflows               # parallel agent teams (~1420)
+build feature-dev@claude-plugins-official             # (~240)
+build ralph-loop@claude-plugins-official              # long autonomous loops (~90)
+build tdd-workflows@claude-code-workflows             # (~370)
+build pr-review-toolkit@claude-plugins-official       # multi-angle PR review (~2030)
+build chrome-devtools-mcp@claude-plugins-official     # perf / network / console debugging (~810)
+build mattpocock-skills@claude-plugins-official       # advanced TypeScript (~1650)
+
+# design: deep UI/UX and design-tool work
+design ui-design@claude-code-workflows                # design systems, components (~1170)
+design ui-theme-designer@claude-plugins-official      # theming (~560)
+design superdesign@claude-plugins-official            # design canvas (~190)
+design modern-web-guidance@claude-plugins-official    # modern CSS / web platform (~750)
+design figma@claude-plugins-official                  # Figma MCP (~2580)
+
+# backend: data, APIs, deployment
+backend backend-development@claude-code-workflows     # (~1550)
+backend database-design@claude-code-workflows         # (~310)
+backend api-scaffolding@claude-code-workflows         # (~480)
+backend supabase@claude-plugins-official              # Supabase MCP (~640)
+backend deployment-validation@claude-code-workflows   # (~210)
+
+# pm: project management
+pm conductor@claude-code-workflows                    # tracked tracks / specs (~560)
+pm linear@claude-plugins-official                     # Linear MCP (0)
+pm notion@claude-plugins-official                     # Notion MCP (~210)
+
+# ops: hosting and monitoring
+ops vercel@claude-plugins-official                    # Vercel MCP + hooks (~4220)
+ops sentry@claude-plugins-official                    # Sentry MCP (~1070)
+
+# meta: extending Claude itself, docs and office files
+meta claude-md-management@claude-plugins-official     # (~180)
+meta hookify@claude-plugins-official                  # (~290)
+meta skill-creator@claude-plugins-official            # (~110)
+meta plugin-dev@claude-plugins-official               # (~2350)
+meta mcp-server-dev@claude-plugins-official           # (~500)
+meta document-skills@anthropic-agent-skills           # docx / pdf / pptx / xlsx (~1030)
+meta example-skills@anthropic-agent-skills            # artifacts, canvas, webapp-testing… (~1220)

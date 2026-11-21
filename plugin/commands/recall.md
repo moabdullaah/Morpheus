@@ -1,13 +1,9 @@
 ---
-description: Ask Morpheus what it knows across all projects
+description: Ask Morpheus what it knows, across every project
 argument-hint: "<question>"
 allowed-tools: Bash, Read, Grep, Glob
 ---
-Answer from Morpheus's brain: "$ARGUMENTS"
-
-Search in this order and cite which project or file each fact came from:
-1. `morpheus-memory` MCP `search_nodes`
-2. `grep -ri` across `~/.morpheus/` (profile, lessons, projects/, patterns/)
-3. `node "${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs" find <keywords>`, then read the relevant files in
-   those projects by absolute path.
-If nothing is known, say so plainly.
+Answer: "$ARGUMENTS"
+1. `node "${CLAUDE_PLUGIN_ROOT}/scripts/brain.mjs" search "<key terms>"` (brain). If code is relevant, add `--code` to search every registered project.
+2. Read the most relevant hits (briefs, patterns, files in other projects by absolute path).
+3. Answer concisely and cite the source for each fact (`project › file`). If nothing is known, say so plainly.
