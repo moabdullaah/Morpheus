@@ -1,7 +1,7 @@
 {
   "name": "morpheus",
-  "version": "1.0.0",
-  "description": "Morpheus: global orchestrator brain with cross-project memory, a project registry, specialist agents and a spec \u2192 design \u2192 architecture \u2192 build \u2192 ship playbook.",
+  "version": "2.1.0",
+  "description": "Morpheus: global orchestrator brain for Claude Code. 14-agent crew incl. Sentinel (security), lean plugin packs, cross-project memory, guard hook.",
   "author": {
     "name": "Morpheus"
   },

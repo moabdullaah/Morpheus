@@ -1,5 +1,5 @@
 ---
-name: sentinel
+name: sentinel-kb
 description: Sentinel's security knowledge base. Stack-specific vulnerability checklists (Next.js, Supabase/Postgres RLS, auth & sessions, APIs, payments & webhooks, LLM/AI features, uploads & SSRF, headers/CSP/CORS, dependencies & CI, secrets) plus the findings-ledger and threat-model templates. Load when doing security review, audit, threat modeling or hardening of an app built with Morpheus.
 ---
 

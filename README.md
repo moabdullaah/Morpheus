@@ -6,7 +6,7 @@ switchable packs, and one shared memory that grows with each project you build.
 
 ## Install (once per machine)
 ```bash
-git clone https://github.com/<you>/morpheus ~/.morpheus-src
+git clone https://github.com/moabdullaah/morpheus ~/.morpheus-src
 cd ~/.morpheus-src && ./install.sh          # Windows: .\install.ps1
 ```
 Options: `MORPHEUS_PACKS="build,design"` turns packs on everywhere · `MORPHEUS_PROJECTS="$HOME/code $HOME/work"`
@@ -107,7 +107,7 @@ Sentinel owns the security of every app Morpheus builds, from design to every pu
 
 - **Proves, doesn't guess**: Recon → Model → Hunt → **Prove** → Fix → **Regress** → Record. Every finding is
   confirmed with an end-to-end trace or a failing test, and every Critical or High fix gets a security regression test.
-- **Stack-aware knowledge base** (`morpheus:sentinel` skill): checklists for Next.js, Supabase RLS, auth, APIs,
+- **Stack-aware knowledge base** (`morpheus:sentinel-kb` skill): checklists for Next.js, Supabase RLS, auth, APIs,
   payments and webhooks, LLM/AI (OWASP LLM Top 10), uploads and SSRF, headers and CSP, supply chain and secrets. It loads only what's relevant.
 - **Automatic**: Morpheus dispatches Sentinel on its own for auth, API, data, payments, upload, AI, CI and dependency
   changes. If it doesn't, a Stop-hook **tripwire** notices security-sensitive edits and triggers a review (`MORPHEUS_SENTINEL=0` to disable).
@@ -133,7 +133,7 @@ node plugin/scripts/brain.mjs <command>
 .claude-plugin/marketplace.json     this repo is a plugin marketplace
 plugin/
   skills/morpheus/SKILL.md          operating system: modes, crew dispatch, tool map, gates, memory API
-  skills/sentinel/                  security knowledge base: 10 stack checklists + ledger/threat-model templates
+  skills/sentinel-kb/               security knowledge base: 10 stack checklists + ledger/threat-model templates
   agents/                           morpheus + 14 crew members incl. sentinel (shared protocol)
   commands/                         init, pack, projects, recall, remember, reflect, sentinel, doctor, sync
   hooks/hooks.json                  PreToolUse (guard) · SessionStart (load) · Stop (capture) · SessionEnd (autosave)

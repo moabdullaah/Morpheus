@@ -414,7 +414,7 @@ function stopHook() {
   if (reason) process.stdout.write(JSON.stringify({ decision: "block", reason }));
 }
 function kb(topic) {
-  const dir = path.join(PLUGIN_ROOT, "skills", "sentinel");
+  const dir = path.join(PLUGIN_ROOT, "skills", "sentinel-kb");
   if (!topic) { console.log(read(path.join(dir, "SKILL.md")).replace(/^---[\s\S]*?---\n/, "")); return; }
   const f = path.join(dir, "references", `${slugify(topic)}.md`);
   if (!exists(f)) { console.error(`No topic "${topic}". Topics: ${fs.readdirSync(path.join(dir, "references")).map((x) => x.replace(/\.md$/, "")).join(", ")}`); process.exit(1); }

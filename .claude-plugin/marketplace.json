@@ -1,13 +1,17 @@
 {
   "name": "morpheus",
-  "owner": { "name": "Morpheus" },
-  "metadata": { "description": "Morpheus: a global AI brain that orchestrates design, architecture, PM and engineering across all your projects." },
+  "owner": {
+    "name": "Morpheus"
+  },
+  "metadata": {
+    "description": "Morpheus: a global AI brain that orchestrates design, architecture, PM and engineering across all your projects."
+  },
   "plugins": [
     {
       "name": "morpheus",
       "source": "./plugin",
-      "description": "The brain: orchestrator, cross-project memory, project registry, 33 specialist agents, and MCP servers.",
-      "version": "1.0.0"
+      "description": "Morpheus: global orchestrator brain for Claude Code. 14-agent crew incl. Sentinel (security), lean plugin packs, cross-project memory, guard hook.",
+      "version": "2.1.0"
     }
   ]
 }
