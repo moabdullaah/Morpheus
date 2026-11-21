@@ -1,6 +1,6 @@
 {
   "name": "morpheus",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Morpheus: global orchestrator brain for Claude Code. 14-agent crew incl. Sentinel (security), lean plugin packs, cross-project memory, guard hook.",
   "author": {
     "name": "Morpheus"

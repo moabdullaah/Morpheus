@@ -35,7 +35,8 @@ say "Adding marketplaces…"
 grep '^@marketplace ' "$DEPS" | while read -r _ spec; do
   IFS='|' read -r _name repo ref <<< "$spec"
   src="$repo${ref:+#$ref}"   # community marketplaces are pinned to an audited commit
-  claude plugin marketplace add "$src" --scope user >/dev/null 2>&1 && echo "   ✓ $repo${ref:+ (pinned ${ref:0:7})}" || echo "   • $repo (already added)"
+  if out="$(claude plugin marketplace add "$src" --scope user 2>&1)"; then echo "   ✓ $repo${ref:+ (pinned ${ref:0:7})}"
+  elif grep -qi already <<< "$out"; then echo "   • $repo (already added)"; else warn "marketplace $repo: $(tail -1 <<< "$out")"; fi
 done
 claude plugin marketplace add "$SOURCE" --scope user >/dev/null 2>&1 && echo "   ✓ morpheus ($SOURCE)" || echo "   • morpheus (already added)"
 claude plugin marketplace update >/dev/null 2>&1 || true
@@ -44,7 +45,7 @@ say "Installing plugins (global packs:${GLOBAL_PACKS})…"
 on=0; off=0; bad=()
 while read -r pack plugin _; do
   [[ -z "${pack:-}" || "$pack" == \#* || "$pack" == @* || -z "${plugin:-}" ]] && continue
-  if ! claude plugin install "$plugin" --scope user -y >/dev/null 2>&1; then bad+=("$plugin"); continue; fi
+  if ! out="$(claude plugin install "$plugin" --scope user -y 2>&1)"; then bad+=("$plugin"); warn "$plugin: $(tail -1 <<< "$out")"; continue; fi
   if [[ "$GLOBAL_PACKS" == *" $pack "* ]]; then
     claude plugin enable "$plugin" --scope user >/dev/null 2>&1; on=$((on+1))
   else

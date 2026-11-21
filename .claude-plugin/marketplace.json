@@ -11,7 +11,97 @@
       "name": "morpheus",
       "source": "./plugin",
       "description": "Morpheus: global orchestrator brain for Claude Code. 14-agent crew incl. Sentinel (security), lean plugin packs, cross-project memory, guard hook.",
-      "version": "2.1.0"
+      "version": "2.2.0"
+    },
+    {
+      "name": "c4-architecture",
+      "source": "./vendor/wshobson/c4-architecture",
+      "description": "Comprehensive C4 architecture documentation workflow with bottom-up code analysis, component synthesis, container mapping, and context diagram generation (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.0.1"
+    },
+    {
+      "name": "before-you-build",
+      "source": "./vendor/wshobson/before-you-build",
+      "description": "Pre-build product risk review for founders, product teams, and AI-assisted builders before implementation starts. (bundled from wshobson/agents @4220308, MIT)",
+      "version": "0.1.1"
+    },
+    {
+      "name": "accessibility-compliance",
+      "source": "./vendor/wshobson/accessibility-compliance",
+      "description": "WCAG accessibility auditing, compliance validation, UI testing for screen readers, keyboard navigation, and inclusive design (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.2.4"
+    },
+    {
+      "name": "full-stack-orchestration",
+      "source": "./vendor/wshobson/full-stack-orchestration",
+      "description": "End-to-end feature orchestration with testing, security, performance, and deployment (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.3.2"
+    },
+    {
+      "name": "agent-teams",
+      "source": "./vendor/wshobson/agent-teams",
+      "description": "Orchestrate multi-agent teams for parallel code review, hypothesis-driven debugging, and coordinated feature development using Claude Code's Agent Teams (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.0.4"
+    },
+    {
+      "name": "tdd-workflows",
+      "source": "./vendor/wshobson/tdd-workflows",
+      "description": "Test-driven development methodology with red-green-refactor cycles and code review (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.3.2"
+    },
+    {
+      "name": "ui-design",
+      "source": "./vendor/wshobson/ui-design",
+      "description": "Comprehensive UI/UX design plugin for mobile (iOS, Android, React Native) and web applications with design systems, accessibility, and modern patterns (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.0.5"
+    },
+    {
+      "name": "backend-development",
+      "source": "./vendor/wshobson/backend-development",
+      "description": "Backend API design, GraphQL architecture, workflow orchestration with Temporal, and test-driven backend development (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.3.3"
+    },
+    {
+      "name": "database-design",
+      "source": "./vendor/wshobson/database-design",
+      "description": "Database architecture, schema design, and SQL optimization for production systems (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.2.2"
+    },
+    {
+      "name": "api-scaffolding",
+      "source": "./vendor/wshobson/api-scaffolding",
+      "description": "REST and GraphQL API scaffolding, framework selection, backend architecture, and API generation (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.2.4"
+    },
+    {
+      "name": "deployment-validation",
+      "source": "./vendor/wshobson/deployment-validation",
+      "description": "Pre-deployment checks, configuration validation, and deployment readiness assessment (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.2.2"
+    },
+    {
+      "name": "conductor",
+      "source": "./vendor/wshobson/conductor",
+      "description": "Context-Driven Development plugin that transforms Claude Code into a project management tool with structured workflow: Context \u2192 Spec & Plan \u2192 Implement (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.2.3"
+    },
+    {
+      "name": "security-scanning",
+      "source": "./vendor/wshobson/security-scanning",
+      "description": "SAST analysis, dependency vulnerability scanning, OWASP Top 10 compliance, container security scanning, and automated security hardening (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.3.3"
+    },
+    {
+      "name": "backend-api-security",
+      "source": "./vendor/wshobson/backend-api-security",
+      "description": "API security hardening, authentication implementation, authorization patterns, rate limiting, and input validation (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.2.2"
+    },
+    {
+      "name": "frontend-mobile-security",
+      "source": "./vendor/wshobson/frontend-mobile-security",
+      "description": "XSS prevention, CSRF protection, content security policies, mobile app security, and secure storage patterns (bundled from wshobson/agents @4220308, MIT)",
+      "version": "1.2.2"
     }
   ]
 }

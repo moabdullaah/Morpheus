@@ -22,9 +22,11 @@ $GlobalPacks = @("core") + @(($env:MORPHEUS_PACKS -split ',') | Where-Object { $
 Write-Host "> Adding marketplaces..." -ForegroundColor Green
 Get-Content $Deps | Where-Object { $_ -like "@marketplace *" } | ForEach-Object {
   $parts = $_.Substring(13) -split '\|'; $src = $parts[1]; if ($parts.Count -gt 2 -and $parts[2]) { $src = "$($parts[1])#$($parts[2])" }
-  claude plugin marketplace add $src --scope user *> $null; Write-Host "   $src"
+  $out = (claude plugin marketplace add $src --scope user 2>&1 | Out-String)
+  if ($LASTEXITCODE -ne 0 -and $out -notmatch 'already') { Write-Warning "Marketplace ${src}: $($out.Trim())" } else { Write-Host "   $src" }
 }
-claude plugin marketplace add $Source --scope user *> $null
+$out = (claude plugin marketplace add $Source --scope user 2>&1 | Out-String)
+if ($LASTEXITCODE -ne 0 -and $out -notmatch 'already') { Write-Warning "Marketplace morpheus: $($out.Trim())" }
 claude plugin marketplace update *> $null
 
 Write-Host "> Installing plugins (global packs: $($GlobalPacks -join ', '))..." -ForegroundColor Green
@@ -33,8 +35,8 @@ foreach ($line in Get-Content $Deps) {
   $l = ($line -replace '\s+#.*$', '').Trim()
   if (-not $l -or $l.StartsWith('#') -or $l.StartsWith('@')) { continue }
   $pack, $plugin = $l -split '\s+'
-  claude plugin install $plugin --scope user -y *> $null
-  if ($LASTEXITCODE -ne 0) { $failed += $plugin; continue }
+  $out = (claude plugin install $plugin --scope user -y 2>&1 | Out-String)
+  if ($LASTEXITCODE -ne 0) { $failed += $plugin; Write-Warning "${plugin}: $(($out.Trim() -split "`n")[-1])"; continue }
   if ($GlobalPacks -contains $pack) { claude plugin enable $plugin --scope user *> $null; $on++ }
   else { claude plugin disable $plugin --scope user *> $null; $off++ }
 }

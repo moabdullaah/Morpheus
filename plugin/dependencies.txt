@@ -8,19 +8,21 @@
 #   - Anthropic-maintained marketplaces track latest (reviewed upstream).
 #   - Community marketplaces are PINNED to a commit that was audited (no hooks, no MCP servers,
 #     no runtime network calls at audit time). Bump pins only via tools/review-update.sh.
+#   - wshobson/agents plugins are BUNDLED in this repo (vendor/wshobson, MIT) and served from the
+#     morpheus marketplace: no name clash with other "claude-code-workflows" marketplaces, and the code
+#     you install is exactly the audited copy. Refresh with tools/vendor-sync.sh.
 
 @marketplace claude-plugins-official|anthropics/claude-plugins-official
 @marketplace anthropic-agent-skills|anthropics/skills
-@marketplace claude-code-workflows|wshobson/agents|42203085cfc5736204bf0f6d436dff7e1da0bf3f
 @marketplace ui-ux-pro-max-skill|nextlevelbuilder/ui-ux-pro-max-skill|2de1134dc4d1cfe112934611ae5803ae17a1bd7e
 
 # core: one tool per job, always on
 core superpowers@claude-plugins-official              # process spine: brainstorm, plans, subagents, TDD, debug, verify (~850)
 core ui-ux-pro-max@ui-ux-pro-max-skill                # design intelligence: styles, palettes, fonts, UX rules (~1070)
 core frontend-design@claude-plugins-official          # distinctive, non-generic UI aesthetics (~80)
-core c4-architecture@claude-code-workflows            # architecture docs (C4) (~470)
-core before-you-build@claude-code-workflows           # idea / scope sanity check (~130)
-core accessibility-compliance@claude-code-workflows   # WCAG 2.2 (~350)
+core c4-architecture@morpheus            # architecture docs (C4) (~470)
+core before-you-build@morpheus           # idea / scope sanity check (~130)
+core accessibility-compliance@morpheus   # WCAG 2.2 (~350)
 core code-review@claude-plugins-official              # PR / diff review (~20)
 core commit-commands@claude-plugins-official          # commit / push / PR (~100)
 core security-guidance@claude-plugins-official        # security hooks (0)
@@ -30,40 +32,40 @@ core github@claude-plugins-official                   # GitHub MCP (0)
 core typescript-lsp@claude-plugins-official           # TS language server (0)
 
 # build: heavier orchestration for large features and long runs
-build full-stack-orchestration@claude-code-workflows  # (~600)
-build agent-teams@claude-code-workflows               # parallel agent teams (~1420)
+build full-stack-orchestration@morpheus  # (~600)
+build agent-teams@morpheus               # parallel agent teams (~1420)
 build feature-dev@claude-plugins-official             # (~240)
 build ralph-loop@claude-plugins-official              # long autonomous loops (~90)
-build tdd-workflows@claude-code-workflows             # (~370)
+build tdd-workflows@morpheus             # (~370)
 build pr-review-toolkit@claude-plugins-official       # multi-angle PR review (~2030)
 build chrome-devtools-mcp@claude-plugins-official     # perf / network / console debugging (~810)
 build mattpocock-skills@claude-plugins-official       # advanced TypeScript (~1650)
 
 # design: deep UI/UX and design-tool work
-design ui-design@claude-code-workflows                # design systems, components (~1170)
+design ui-design@morpheus                # design systems, components (~1170)
 design ui-theme-designer@claude-plugins-official      # theming (~560)
 design superdesign@claude-plugins-official            # design canvas (~190)
 design modern-web-guidance@claude-plugins-official    # modern CSS / web platform (~750)
 design figma@claude-plugins-official                  # Figma MCP (~2580)
 
 # backend: data, APIs, deployment
-backend backend-development@claude-code-workflows     # (~1550)
-backend database-design@claude-code-workflows         # (~310)
-backend api-scaffolding@claude-code-workflows         # (~480)
+backend backend-development@morpheus     # (~1550)
+backend database-design@morpheus         # (~310)
+backend api-scaffolding@morpheus         # (~480)
 backend supabase@claude-plugins-official              # Supabase MCP (~640)
-backend deployment-validation@claude-code-workflows   # (~210)
+backend deployment-validation@morpheus   # (~210)
 
 # pm: project management
-pm conductor@claude-code-workflows                    # tracked tracks / specs (~560)
+pm conductor@morpheus                    # tracked tracks / specs (~560)
 pm linear@claude-plugins-official                     # Linear MCP (0)
 pm notion@claude-plugins-official                     # Notion MCP (~210)
 
 # security: app security tooling (core already has security-guidance + the Morpheus guard)
 security claude-security@claude-plugins-official      # deep vuln scan of your code, findings challenged (~780; hooks)
 security semgrep@claude-plugins-official              # SAST rules while coding (~450; hooks + MCP, needs semgrep login)
-security security-scanning@claude-code-workflows      # SAST, dependency & container scanning, OWASP (~750)
-security backend-api-security@claude-code-workflows   # authN/Z, rate limiting, input validation (~200)
-security frontend-mobile-security@claude-code-workflows # XSS, CSRF, CSP, secure storage (~320)
+security security-scanning@morpheus      # SAST, dependency & container scanning, OWASP (~750)
+security backend-api-security@morpheus   # authN/Z, rate limiting, input validation (~200)
+security frontend-mobile-security@morpheus # XSS, CSRF, CSP, secure storage (~320)
 
 # ops: hosting and monitoring
 ops vercel@claude-plugins-official                    # Vercel MCP + hooks (~4220)
